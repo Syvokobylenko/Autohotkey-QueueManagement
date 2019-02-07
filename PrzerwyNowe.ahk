@@ -1,34 +1,47 @@
 ﻿FormatTime, TimeString ,, yyMM
-if ( TimeString != "1901")
+if ( TimeString != "1901") and ( TimeString != "1902")
 	{
 	MsgBox, Wesja nieaktualna.
 	ExitApp
 	}
+MsgBox, Witaj w Aplikacji przerwy! Autor - Maksym Syvokobylenko. Kod źródłowy jest własnością Maksyma Syvokobylenko. Aplikacja udostępniona do użytkowania przez CompanyNameHidden Główny alfa tester - Patrycja Florkowska! 
+MsgBox, 
+(
+1.Podajemy login, a następnie wciskamy ok.
+2.Po kilku sekundach powinno wyskoczyć okienko informujące o statusie.
+3.Jeśli nie jesteśmy na przerwie, możemy się zapisać klikając dodaj do kolejki.
+4.Po dodaniu do kolejki czekamy na zapisanie. Status można sprawdzić klikając H na pasku.
+5.W momencie przyznania przerwy wyskoczy nam powiadomienie które należy zaakceptować w ciągu 3ch minut.
+6.Po zaakceptowaniu kończymy połączenie i wychodzimy na przerwę.
+7.Po powrocie z przerwy wciskamy koniec przerwy. Czekamy na zapisanie.
+8.W razie błędów otwieramy aplikację jeszcze raz i klikamy tak na pojawiające się okienko (single instance).
+Instrukcja autorstwa Klaudii Szymoniak.
+)
 login := ""
-FileRead, loginfile, login.ini
-MsgBox, Witaj w Aplikacji przerwy! Autor - Maksym Syvokobylenko. Kod źródłowy jest własnością Maksyma Syvokobylenko. Poprawki naniosła Patrycja Florkowska! Aplikacja udostępniona do użytkowania przez CompanyNameHidden
+if FileExist("login.ini")
+	{
+	FileRead, login, login.ini
+	goto, startlogin
+	}
 Gui, Destroy
-InputBox, login, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):,,350,100,,,,, %loginfile%
+InputBox, login, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):,,350,150,,,,, %loginfile%
 if ErrorLevel
 	{
 	MsgBox Błąd Loginu - Aplikacja jest wyłączana.
 	ExitApp
 	}
+sleep 2000
+FileAppend,%login%, login.ini
+startlogin:
 if (login = "")
 	{
 	MsgBox Błąd Loginu - Aplikacja jest wyłączana.
 	ExitApp
 	}
-if (login != loginfile)
-	{
-	FileDelete, login.ini
-	sleep 2000
-	FileAppend,%login%, login.ini
-	}
 loginline := "" login "`n"
 start:
 GuiClose:
-if !FileExist("przerwy\queuelist")
+if !FileExist("przerwyV2\queuelist")
 	{
 	sleep 5000
 	goto, start
@@ -50,7 +63,7 @@ Gui, Destroy
 count = 1
 list := ""
 inqueue := False
-Loop, Read, przerwy\queuelist
+Loop, Read, przerwyV2\queuelist
 	{
 	list := A_LoopReadLine
 	If (list = login)
@@ -60,7 +73,8 @@ Loop, Read, przerwy\queuelist
 		}
 	count += 1
 	}
-FileRead, quantity, przerwy\liczbaprzerw
+FileRead, data, przerwyV2\queuelist
+FileRead, quantity, przerwyV2\liczbaprzerw
 If inqueue
 	{
 	if (count > quantity)
@@ -69,44 +83,22 @@ If inqueue
 		Gui, Destroy
 		Gui, Add, Text,, Jesteś %count%. w kolejce.
 		Gui, Add, Text,, Ilość osób na przerwie: %quantity%.
+		Gui, Add, Text,ym, Kolejka:
+		Gui, Add, Text,,%data%
 		Gui, Add, Button, default, Usun_z_Kolejki
 		Gui, Show, Minimize , Zapisano na przerwę.
-		FileRead, checkin, przerwy\checkin
-		If not InStr(checkin, login)
-			{
-			FileAppend,%loginline%, przerwy\checkin
-			}
 		sleep 30000
 		goto, start
 		}
 	else
 		{
-		Gui, Destroy
-		Gui, Add, Text,, Zaakceptuj swoją przerwę (inaczej ją stracisz)!
-		Gui, Add, Button, default, Akceptuję
-		Gui, Show,, Masz 3 minuty!
-		sleep 180000
-		Gui, Destroy
-		goto, ButtonKoniec_Przerwy
 		ButtonAkceptuję:
 		Gui, Destroy
-		Gui, Add, Text,, Zakończ połączenie i kliknij:
-		Gui, Add, Button, default, Wychodze_na_przerwę
-		Gui, Show,, Rozpocznij przerwę
-		Akceptacja:
-		FileRead, checkin, przerwy\checkin
-		If not InStr(checkin, login)
-			{
-			FileAppend,%loginline%, przerwy\checkin
-			}
-		sleep 30000
-		goto, Akceptacja
-		ButtonWychodze_na_przerwę:
-		Gui, Destroy
-		Gui, Add, Text,, Możesz wyjść na przerwę.
+		Gui, Add, Text,, Otrzymujesz przerwę po powrocie wciśnij:
 		Gui, Add, Button, default, Koniec_Przerwy
-		Gui, Show,, Przerwa!
-		goto, Akceptacja
+		Gui, Show,, Możesz wyjść na przerwę.
+		sleep 90000
+		goto, ButtonAkceptuję
 		}
 	}
 Else
@@ -115,6 +107,8 @@ Else
 	display := count - 1 
 	Gui, Add, Text,, Nie jesteś w kolejce. Ilość osób w kolejce: %display%
 	Gui, Add, Text,, Ilość osób na przerwie: %quantity%.
+	Gui, Add, Text,ym, Kolejka:
+	Gui, Add, Text,,%data%
 	Gui, Add, Button, default, Dodaj_do_kolejki
 	Gui, Show, Minimize , Nie jesteś w kolejce.
 	sleep 30000
@@ -127,9 +121,9 @@ Gui, Destroy
 action := "koniec"
 Gui, Add, Text,, Oczekiwanie na serwer. Nie wyłączaj programu!
 Gui, Show, Minimize , Przetwarzanie.
-if !FileExist("przerwy\rmqueue") and !FileExist("przerwy\addqueue")
+if !FileExist("przerwyV2\rmqueue") and !FileExist("przerwyV2\addqueue")
 	{
-	FileAppend,%loginline%, przerwy\rmqueue
+	FileAppend,%loginline%, przerwyV2\rmqueue
 	goto, aftertask
 	}
 sleep 20000
@@ -139,24 +133,19 @@ Gui, Destroy
 action := "dodaj"
 Gui, Add, Text,, Oczekiwanie na serwer. Nie wyłączaj programu!
 Gui, Show, Minimize , Przetwarzanie.
-if !FileExist("przerwy\rmqueue") and !FileExist("przerwy\addqueue")
+if !FileExist("przerwyV2\rmqueue") and !FileExist("przerwyV2\addqueue")
 	{
-	FileAppend,%loginline%, przerwy\addqueue
+	FileAppend,%loginline%, przerwyV2\addqueue
 	goto, aftertask
 	}
 sleep 20000
 goto, ButtonDodaj_do_kolejki
 aftertask:
 action := "aftertask"
-if !FileExist("przerwy\rmqueue") and !FileExist("przerwy\addqueue")
+if !FileExist("przerwyV2\rmqueue") and !FileExist("przerwyV2\addqueue")
 	{
 	action := ""
 	goto, start
-	}
-FileRead, checkin, przerwy\checkin
-If not InStr(checkin, login)
-	{
-	FileAppend,%loginline%, przerwy\checkin
 	}
 sleep 10000
 goto, aftertask

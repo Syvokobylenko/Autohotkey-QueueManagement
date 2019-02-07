@@ -1,54 +1,19 @@
-﻿FormatTime, TimeString ,, HHmm
-TimeString2 := TimeString + 1
+﻿FormatTime, TimeString ,, yyMM
+if ( TimeString != "1901") and ( TimeString != "1902")
+	{
+	MsgBox, Wesja nieaktualna.
+	ExitApp
+	}
 data := ""
-FileRead, data, przerwy\queuelist
+FileRead, data, przerwyV2\queuelist
 data := variableclearenter(data)
 start:
 sleep 10000
 Gui, Destroy
-FormatTime, TimeString ,, HHmm
-if ( Timestring > TimeString2)
-	{
-	FileRead, datachanged, przerwy\queuelist
-	datachanged := variableclearenter(datachanged)
-	sleep 2000
-	if (data != datachanged)
-		{
-		data := variableclearenter(data)
-		queuelistrewrite(data)
-		goto, start
-		}
-	FileRead, checkin, przerwy\checkin
-	checkin := variableclearenter(checkin)
-	datachanged := ""
-	Loop, Read, przerwy\queuelist
-		{
-		if InStr(checkin, A_LoopReadLine)
-			{
-			datachanged .= "" A_LoopReadLine "`n"
-			}
-		}
-	datachanged := variableclearenter(datachanged)
-	data := variableclearenter(data)
-	if (data != datachanged)
-		{
-		data := datachanged
-		queuelistrewrite(datachanged)
-		}
-	againcheckin:
-	FileDelete, przerwy\checkin
-	if (ErrorLevel != 0)
-	{
-	sleep 1000
-	goto, againcheckin
-	}
-	FormatTime, TimeString ,, HHmm
-	TimeString2 := TimeString + 2
-	}
-if FileExist("przerwy\addqueue")
+if FileExist("przerwyV2\addqueue")
 	{
 	toadd := ""
-	FileRead, toadd, przerwy\addqueue
+	FileRead, toadd, przerwyV2\addqueue
 	If InStr(data, toadd)
 		{
 		toadd := ""
@@ -56,43 +21,30 @@ if FileExist("przerwy\addqueue")
 	data .= toadd
 	data := variableclearenter(data)
 	queuelistrewrite(data)
-	again:
-	FileDelete, przerwy\addqueue
-	if (ErrorLevel != 0)
-		{
-		sleep 1000
-		goto, again
-		}
+	FileDelete, przerwyV2\addqueue
+	Sleep 5000
 	}
-if FileExist("przerwy\rmqueue")
+if FileExist("przerwyV2\rmqueue")
 	{
 	toremove := ""
-	FileRead, toremove, przerwy\rmqueue
+	FileRead, toremove, przerwyV2\rmqueue
 	toremove := variableclearenter(toremove)
 	data := StrReplace(data, toremove)
 	data := variableclearenter(data)
 	queuelistrewrite(data)
-	again5:
-	FileDelete, przerwy\rmqueue
-		if (ErrorLevel != 0)
-			{
-			sleep 1000
-			goto, again5
-			}
+	FileDelete, przerwyV2\rmqueue
+	Sleep 5000
 	}
 goto, start
-queuelistrewrite(data)
+queuelistrewrite(variable)
 	{
-	variableclearenter(data)
-	deleteagain:
-	FileDelete, przerwy\queuelist
-	if (ErrorLevel != 0)
-			{
-			sleep 1000
-			goto, deleteagain
-			}
-	FileAppend,%data%, przerwy\queuelist
-	sleep 5000
+	variableclearenter(variable)
+	FileDelete, przerwyV2\queuelist
+	Sleep 3000
+	FileDelete, przerwyV2\queuelist
+	Sleep 3000
+	FileAppend,%variable%, przerwyV2\queuelist
+	sleep 7000
 	return
 	}
 variableclearenter(variable)
