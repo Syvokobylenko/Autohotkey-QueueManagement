@@ -4,14 +4,26 @@ if ( TimeString != "1901")
 	MsgBox, Wesja nieaktualna.
 	ExitApp
 	}
-MsgBox, Witaj w Aplikacji przerwy! Autor - Maksym Syvokobylenko. Kod źródłowy jest własnością Maksyma Syvokobylenko. Aplikacja udostępniona do użytkowania przez CompanyNameHidden
-Gui, Destroy
 login := ""
-InputBox, login, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):,,350,100,,,,,
+FileRead, loginfile, login.ini
+MsgBox, Witaj w Aplikacji przerwy! Autor - Maksym Syvokobylenko. Kod źródłowy jest własnością Maksyma Syvokobylenko. Poprawki naniosła Patrycja Florkowska! Aplikacja udostępniona do użytkowania przez CompanyNameHidden
+Gui, Destroy
+InputBox, login, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):, Podaj Swój Login do SoftwareNameHidden (imie.nazwisko):,,350,100,,,,, %loginfile%
 if ErrorLevel
 	{
 	MsgBox Błąd Loginu - Aplikacja jest wyłączana.
 	ExitApp
+	}
+if (login = "")
+	{
+	MsgBox Błąd Loginu - Aplikacja jest wyłączana.
+	ExitApp
+	}
+if (login != loginfile)
+	{
+	FileDelete, login.ini
+	sleep 2000
+	FileAppend,%login%, login.ini
 	}
 loginline := "" login "`n"
 start:
@@ -35,18 +47,13 @@ if (action = "aftertask")
 	}
 action := ""
 Gui, Destroy
-if (login = "")
-	{
-	MsgBox Błąd Loginu - Aplikacja jest wyłączana.
-	ExitApp
-	}
 count = 1
 list := ""
 inqueue := False
 Loop, Read, przerwy\queuelist
 	{
 	list := A_LoopReadLine
-	If (list = login) or (list = loginline)
+	If (list = login)
 		{
 		inqueue := True
 		break
@@ -109,7 +116,7 @@ Else
 	Gui, Add, Text,, Nie jesteś w kolejce. Ilość osób w kolejce: %display%
 	Gui, Add, Text,, Ilość osób na przerwie: %quantity%.
 	Gui, Add, Button, default, Dodaj_do_kolejki
-	Gui, Show, , Nie jesteś w kolejce.
+	Gui, Show, Minimize , Nie jesteś w kolejce.
 	sleep 30000
 	goto, start
 	}
